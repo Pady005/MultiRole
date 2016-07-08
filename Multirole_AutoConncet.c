@@ -434,12 +434,6 @@ void Board_initKeys(keysPressedCB_t appKeyCB)
 static void Board_keyCallback(PIN_Handle hPin, PIN_Id pinId)
 {
   keysPressed = 0;
- //uint8_t valueToCopy;
-// uint8_t valueToCopy1;
-
-  //valueToCopy = 0x05;
- // valueToCopy1 = 0x08;
-
   if ( PIN_getInputValue(Board_KEY_SELECT) == 0 )
   {
 	  keysPressed |= KEY_SELECT;
@@ -458,48 +452,15 @@ static void Board_keyCallback(PIN_Handle hPin, PIN_Id pinId)
   if ( PIN_getInputValue(Board_KEY_LEFT) == 0 )
   {
     keysPressed |= KEY_LEFT;
-    PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
-      delay_ms(100);
-      PIN_setOutputValue(hGpioPin,Board_LED1, Board_LED_OFF);
-      delay_ms(100);
-    //SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t), &valueToCopy);
-    //  delay_ms(1000);
-      //SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t), &valueToCopy1);
   }
 
   if ( PIN_getInputValue(Board_KEY_RIGHT) == 0 )
   {
     keysPressed |= KEY_RIGHT;
-    //PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
-  //  SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t), &valueToCopy);
-
   }
 
   Util_startClock(&keyChangeClock);
 }
-
-/*******************************************************************************
- * @fn      SensorTag_blinkLed
- *
- * @brief   Blinks a led 'n' times, duty-cycle 50-50
- * @param   led - led identifier
- * @param   nBlinks - number of blinks
- *
- * @return  none
- */
-void SensorTag_blinkLed(uint8_t led, uint8_t nBlinks)
-{
-  uint8_t i;
-
-  for (i=0; i<nBlinks; i++)
-  {
-    PIN_setOutputValue(hGpioPin, led, Board_LED_ON);
-    delay_ms(100);
-    PIN_setOutputValue(hGpioPin, led, Board_LED_OFF);
-    delay_ms(100);
-  }
-}
-
 /*********************************************************************
  * @fn      Board_keyChangeHandler
  *
@@ -573,9 +534,6 @@ static void simpleTopology_init(void)
   // Setup discovery delay as a one-shot timer
   Util_constructClock(&startDiscClock, simpleTopology_startDiscHandler,
                       DEFAULT_SVC_DISCOVERY_DELAY, 0, false, 0);
-  /*// Create one-shot clocks for internal periodic events.
-    Util_constructClock(&periodicClock, SimpleBLEPeripheral_clockHandler,
-                        SBP_PERIODIC_EVT_PERIOD, 0, false, SBP_PERIODIC_EVT);*/
 
   //init keys and LCD
   Board_initKeys(simpleTopology_keyChangeHandler);
@@ -692,8 +650,6 @@ static void simpleTopology_init(void)
     GATT_RegisterForInd(selfEntity);    
     
   }
- //uint8_t bdAddr[][6]={0xB0,0xB4,0x48,0xBF,0x4B,0x82,};
- //HCI_LE_AddWhiteListCmd(HCI_PUBLIC_DEVICE_ADDRESS, &bdAddr[0][0]);
   // Start the Device
   VOID GAPRole_StartDevice(&simpleTopology_gapRoleCBs);
   // Enable interrupt handling for keys and relay
@@ -779,16 +735,6 @@ static void simpleTopology_taskFxn(UArg a0, UArg a1)
       events &= ~SBT_START_DISCOVERY_EVT;
       
       simpleTopology_startDiscovery();
-
-     /* if (events & SBP_PERIODIC_EVT)
-          {
-            events &= ~SBP_PERIODIC_EVT;
-
-            Util_startClock(&periodicClock);
-
-            // Perform periodic application task
-            SimpleBLEPeripheral_performPeriodicTask();
-          }*/
     }
   }
 }
@@ -1006,14 +952,6 @@ static void simpleTopology_freeAttRsp(uint8_t status)
     rspTxRetry = 0;
   }
 }
-/*static void SimpleBLEPeripheral_performPeriodicTask(void)
-{
-uint8_t valueToCopy;
-
-valueToCopy = 0x55;
-
-SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t), &valueToCopy);
-}*/
 /*********************************************************************
  * @fn      simpleTopology_processAppMsg
  *
@@ -1108,9 +1046,6 @@ uint8_t *peerAddr;
                      else
                      {
                     	 GAPRole_CancelDiscovery();
-                    PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-                    delay_ms(1000);
-                    PIN_setOutputValue(hGpioPin,Board_LED2, Board_LED_OFF);
                        scanningStarted = FALSE;
                      }
         				uint8_t addrType;
@@ -1190,13 +1125,6 @@ uint8_t *peerAddr;
           }
 
        }
-        // Cancel discovery and connect right away.
-           /* if(!(GAPRole_CancelDiscovery())) {
-                // Initiate connection to peer from white list
-                GAPRole_EstablishLink(DEFAULT_LINK_HIGH_DUTY_CYCLE,
-                                             DEFAULT_LINK_WHITE_LIST,
-                                             pEvent->deviceInfo.addrType, pEvent->deviceInfo.addr);
-            }*/
       }
       break;
       
@@ -1243,10 +1171,7 @@ uint8_t *peerAddr;
         if (pEvent->gap.hdr.status == SUCCESS)
         {
           LCD_WRITE_STRING("Connected!", LCD_PAGE3);
-          PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
           LCD_WRITE_STRING_VALUE("Connected to ", gapRoleNumLinks(GAPROLE_ACTIVE_LINKS) ,10, LCD_PAGE0);
-          uint8_t valueToCopy=0x30;
-          SimpleProfile_SetParameter(SIMPLEPROFILE_CHAR1, sizeof(uint8_t), &valueToCopy);
 
           //update state
           connecting_state = 0;
@@ -1321,7 +1246,6 @@ uint8_t *peerAddr;
             charHdl[i] = 0;
             LCD_WRITE_STRING_VALUE("Connected to ", gapRoleNumLinks(GAPROLE_ACTIVE_LINKS) ,10, LCD_PAGE0);
             LCD_WRITE_STRING("Disconnected!", LCD_PAGE5);
-            PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_OFF);
             LCD_WRITE_STRING("Main Menu", LCD_PAGE3);
             LCDmenu = MAIN_MENU;
           }
@@ -1378,34 +1302,6 @@ static void simpleTopology_processCharValueChangeEvt(uint8_t paramID)
     case SIMPLEPROFILE_CHAR1:
     	SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR1, &newValue);
     	LCD_WRITE_STRING_VALUE("Char 1:", (uint16_t)newValue, 10, LCD_PAGE4);
-
-    	 if ((uint16_t)newValue==0x05)
-    	 {
-    		 PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-    	 }
-    	 else if((uint16_t)newValue==0x30)
-    	 {
-    		 PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-    		 delay_ms(1000);
-    		 PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
-    		 delay_ms(500);
-    		 PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_OFF);
-    		  delay_ms(1000);
-    		  PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_OFF);
-    		  delay_ms(500);
-    		   PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-    		   delay_ms(1000);
-    		  PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
-    		  delay_ms(500);
-    		  PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_OFF);
-    		    delay_ms(1000);
-    		    PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_OFF);
-    	 }
-    	 else
-    	 {
-    		 PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_OFF);
-    	 }
-
     	 break;
     case SIMPLEPROFILE_CHAR3:
     	SimpleProfile_GetParameter(SIMPLEPROFILE_CHAR3, &newValue);
@@ -1505,13 +1401,12 @@ void simpleTopology_keyChangeHandler(uint8 keys)
  */
 static void simpleTopology_handleKeys(uint8_t shift, uint8_t keys)
 {
-  (void)shift;// Intentionally unreferenced parameter
+  (void)shift;  // Intentionally unreferenced parameter
+
   if (LCDmenu == MAIN_MENU)
   {
-    /*if (keys & KEY_LEFT)  //show discovery results
+    if (keys & KEY_LEFT)  //show discovery results
     {
-    	 uint8_t addrType;
-    	        uint8_t *peerAddr;
       selectKey = DISCOVERED_DEVICES;
 
       // If discovery has occurred and a device was found
@@ -1527,101 +1422,58 @@ static void simpleTopology_handleKeys(uint8_t shift, uint8_t keys)
         LCD_WRITE_STRING_VALUE("Device", (scanIdx + 1), 10, LCD_PAGE3);
         LCD_WRITE_STRING(Util_convertBdAddr2Str(devList[scanIdx].addr), LCD_PAGE4);
       }
-      if (scanRes > 0)
-              	{
-              		// connect to current device in scan result
-              		peerAddr = devList[scanIdx].addr;
-              		addrType = devList[scanIdx].addrType;
-
-              		GAPRole_EstablishLink(DEFAULT_LINK_HIGH_DUTY_CYCLE,
-                                      	DEFAULT_LINK_WHITE_LIST,
-      									addrType, peerAddr);
-              		connecting_state = 1;
-
-              		LCD_WRITE_STRING("Connecting", LCD_PAGE3);
-              		LCD_WRITE_STRING(Util_convertBdAddr2Str(peerAddr), LCD_PAGE4);
-              	}
       return;
-    }*/
-	  if (keys & KEY_RIGHT)  //Scan for devices
-	     {
-		  PIN_setOutputValue(hGpioPin, Board_LED1, Board_LED_ON);
-		  	                 delay_ms(100);
-		  PIN_setOutputValue(hGpioPin,Board_LED1, Board_LED_OFF);
+    }
+    if (keys & KEY_UP)  //Scan for devices
+    {
+      // Start or stop discovery
+      if (gapRoleNumLinks(GAPROLE_AVAILABLE_LINKS) > 0) //if we can connect to another device
+      {
+        if (!scanningStarted) //if we're not already scanning
+        {
+          scanningStarted = TRUE;
+          scanRes = 0;
 
-	       // Start or stop discovery
-	       if (gapRoleNumLinks(GAPROLE_AVAILABLE_LINKS) > 0) //if we can connect to another device
-	       {
-	         if (!scanningStarted) //if we're not already scanning
-	         {
+          LCD_WRITE_STRING("Discovering...", LCD_PAGE3);
+          LCD_WRITE_STRING("", LCD_PAGE4);
+          LCD_WRITE_STRING("", LCD_PAGE6);
 
-	           scanningStarted = TRUE;
-	           scanRes = 0;
-
-	           LCD_WRITE_STRING("Discovering...", LCD_PAGE3);
-	           LCD_WRITE_STRING("", LCD_PAGE4);
-	           LCD_WRITE_STRING("", LCD_PAGE6);
-
-	           GAPRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
-	                                  DEFAULT_DISCOVERY_ACTIVE_SCAN,
-	                                  DEFAULT_DISCOVERY_WHITE_LIST);
-	           PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-	           	        	 		  	                 delay_ms(100);
-	           	        	 		  PIN_setOutputValue(hGpioPin,Board_LED2, Board_LED_OFF);
-
-	         }
-	         else //cancel scanning
-	         {
-	           LCD_WRITE_STRING("Discovery Cancelled", LCD_PAGE3);
-	           PIN_setOutputValue(hGpioPin, Board_LED2, Board_LED_ON);
-	                 delay_ms(1000);
-	                 PIN_setOutputValue(hGpioPin,Board_LED2, Board_LED_OFF);
-	           GAPRole_CancelDiscovery();
-	           scanningStarted = FALSE;
-	         }
-	         delay_ms(2000);
-	         uint8_t addrType;
-	             	        uint8_t *peerAddr;
-	               selectKey = DISCOVERED_DEVICES;
-
-	               // If discovery has occurred and a device was found
-	               if (!scanningStarted && scanRes > 0)
-	               {
-	                 // Increment index of current result (with wraparound)
-	                 scanIdx++;
-	                 if (scanIdx >= scanRes)
-	                 {
-	                   scanIdx = 0;
-	                 }
-
-	                 LCD_WRITE_STRING_VALUE("Device", (scanIdx + 1), 10, LCD_PAGE3);
-	                 LCD_WRITE_STRING(Util_convertBdAddr2Str(devList[scanIdx].addr), LCD_PAGE4);
-	               }
-	               if (scanRes > 0)
-	                       	{
-	                       		// connect to current device in scan result
-	                       		peerAddr = devList[scanIdx].addr;
-	                       		addrType = devList[scanIdx].addrType;
-
-	                       		GAPRole_EstablishLink(DEFAULT_LINK_HIGH_DUTY_CYCLE,
-	                                               	DEFAULT_LINK_WHITE_LIST,
-	               									addrType, peerAddr);
-	                       		connecting_state = 1;
-
-	                       		LCD_WRITE_STRING("Connecting", LCD_PAGE3);
-	                       		LCD_WRITE_STRING(Util_convertBdAddr2Str(peerAddr), LCD_PAGE4);
-	                       	}
-	               return;
-	       }
-
-	       else // can't add more links at this time
-	       {
-	         LCD_WRITE_STRING("Can't scan:no links ", LCD_PAGE3);
-	       }
-	       return;
-	     }
+          GAPRole_StartDiscovery(DEFAULT_DISCOVERY_MODE,
+                                 DEFAULT_DISCOVERY_ACTIVE_SCAN,
+                                 DEFAULT_DISCOVERY_WHITE_LIST);
+        }
+        else //cancel scanning
+        {
+          LCD_WRITE_STRING("Discovery Cancelled", LCD_PAGE3);
+          GAPRole_CancelDiscovery();
+          scanningStarted = FALSE;
+        }
+      }
+      else // can't add more links at this time
+      {
+        LCD_WRITE_STRING("Can't scan:no links ", LCD_PAGE3);
+      }
+      return;
+    }
+    if (keys & KEY_RIGHT)  // turn advertising on / off
+    {
+      uint8_t adv;
+      uint8_t adv_status;
+      GAPRole_GetParameter(GAPROLE_ADVERT_ENABLED, &adv_status, NULL);
+      if (adv_status) //turn off
+      {
+        adv = FALSE;
+        GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t), &adv, NULL);
+      }
+      else //turn on
+      {
+        adv = TRUE;
+        GAPRole_SetParameter(GAPROLE_ADVERT_ENABLED, sizeof(uint8_t), &adv, NULL);
+      }
+      return;
+    }
     
-/*    if (keys & KEY_SELECT) //connect to a discovered device
+    if (keys & KEY_SELECT) //connect to a discovered device
     {
       if (selectKey == DISCOVERED_DEVICES)    // connect to a device  
       {
@@ -1679,7 +1531,7 @@ static void simpleTopology_handleKeys(uint8_t shift, uint8_t keys)
         LCD_WRITE_STRING("No Connection here.", LCD_PAGE3);
       }
       return;
-    }*/
+    }
 
     if (keys & KEY_DOWN) //browse connected devices
     {
@@ -1697,10 +1549,9 @@ static void simpleTopology_handleKeys(uint8_t shift, uint8_t keys)
         LCD_WRITE_STRING("N/A", LCD_PAGE4);
       }
       selectKey = CONNECTED_DEVICES;
-    } 
+    }
     return;
   }
-
 
   else if (LCDmenu == DEVICE_MENU)
   {
